@@ -42,7 +42,4 @@ public class ParkingSpotModel implements Serializable {
     private String block;
 
 
-
-
-
 }

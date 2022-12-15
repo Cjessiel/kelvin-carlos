@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600) //determina se determinado recurso pode ser ou não acessado
@@ -24,12 +27,35 @@ public class ParkingSpotController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> saveParkingSpot (@RequestBody @Valid ParkingSpotRecord parkingSpotRecord){
+    public ResponseEntity<Object> saveParkingSpot (@RequestBody @Valid ParkingSpotRecord parkingSpotRecord) {
+        if (parkingSpotService.existsByLicensePlateCar(parkingSpotRecord.licensePlateCar())){ //metodo criado para verificar se no banco contem os mesmos dados que estao sendo passados, se tiver, ira infomar a mensagem abaixo
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: License Plate Car is in use!");
+        }
+        if (parkingSpotService.existsByParkingSpotNumber(parkingSpotRecord.parkingSpotNumber())){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: Parking Spot ir already in use!");
+        }
+        if (parkingSpotService.existsByApartmentAndBlock(parkingSpotRecord.apartment(), parkingSpotRecord.block())){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Conflict: Parking Spot already registered for this apartment/block!");
+        }
         var parkingSpotModel = new ParkingSpotModel(); //cria um novo objeto de ParkingSpotModel
         BeanUtils.copyProperties(parkingSpotRecord, parkingSpotModel); //copia os dados que estao sendo recebidos no record para o model
         parkingSpotModel.setRegistrationDate(LocalDateTime.now(ZoneId.of("UTC"))); //aqui definimos a data de cadastro
         return ResponseEntity.status(HttpStatus.CREATED).body(parkingSpotService.save(parkingSpotModel));
-        //criamos a respostasta pelo ResponseEntity, ao final no boby criamos o save
+        //criamos a respostasta pelo ResponseEntity, ao final no body criamos o save
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ParkingSpotModel>> getAllParkingSpots(){
+        return ResponseEntity.status(HttpStatus.OK).body(parkingSpotService.findAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> getOneParkingSpots(@PathVariable(value = "id") UUID id) {
+        Optional<ParkingSpotModel> parkingSpotModelOptional = parkingSpotService.findById(id);
+        if (!parkingSpotModelOptional.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parking Spot not found.");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(parkingSpotModelOptional.get());
     }
 
 
