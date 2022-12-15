@@ -4,6 +4,8 @@ import br.com.minhas.aulas.teste.parkingcontrol.models.ParkingSpotModel;
 import br.com.minhas.aulas.teste.parkingcontrol.records.ParkingSpotRecord;
 import br.com.minhas.aulas.teste.parkingcontrol.repositories.ParkingSpotRepository;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -41,8 +43,8 @@ public class ParkingSpotService {
         return parkingSpotRepository.existsByApartmentAndBlock(apartment, block);
     }
 
-    public List<ParkingSpotModel> findAll() {
-        return parkingSpotRepository.findAll();
+    public Page<ParkingSpotModel> findAll(Pageable pageable) {
+        return parkingSpotRepository.findAll(pageable);
     }
 
     public Optional<ParkingSpotModel> findById(UUID id) {
